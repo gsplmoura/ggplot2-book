@@ -1,80 +1,47 @@
-# First steps {#sec-getting-started}
+---
+title: "ggplot"
+format: html
+---
+
+[ggplot2: Elegant Graphics for Data Analysis (3e),](https://ggplot2-book.org/) Hadley Wickham
+
+Wilkinson, Leland. 2005. The Grammar of Graphics. 2nd ed. Statistics and Computing. Springer.
+
+Resources:
+
+-   [ggplot2 documentation](https://ggplot2.tidyverse.org/reference/index.html)
+
+-   ggplot2 mailing list, http://groups.google.com/group/ggplot2
+
+-   ggplot2 community on stackoverflow:
 
 ```{r}
-#| echo: false
-#| message: false
-#| results: asis
-source("common.R")
-status("drafting")
+install.packages(c(
+  "tidyverse", 
+  "colorBlindness", "directlabels", "ggforce", "gghighlight", 
+  "ggnewscale", "ggraph", "ggrepel", "ggtext", "ggthemes", 
+  "hexbin", "Hmisc", "mapproj", "maps", "munsell", "ozmaps", 
+  "paletteer", "patchwork", "rmapshaper", "scico", "seriation", 
+  "sf", "stars", "tidygraph", "wesanderson"
+))
 ```
 
-## Introduction
+```{r}
+library(tidyverse)
 
-The goal of this chapter is to teach you how to produce useful graphics with ggplot2 as quickly as possible.
-You'll learn the basics of `ggplot()` along with some useful "recipes" to make the most important plots.
-`ggplot()` allows you to make complex plots with just a few lines of code because it's based on a rich underlying theory, the grammar of graphics.
-Here we'll skip the theory and focus on the practice, and in later chapters you'll learn how to use the full expressive power of the grammar.
+```
 
-In this chapter you'll learn:
+# Cheetsheet
 
--   About the `mpg` dataset included with ggplot2, @sec-fuel-economy-data.
+## Basics
 
--   The three key components of every plot: data, aesthetics and geoms, @sec-basic-use.
-
--   How to add additional variables to a plot with aesthetics, @sec-aesthetics.
-
--   How to display additional categorical variables in a plot using small multiples created by faceting, @sec-qplot-faceting.
-
--   A variety of different geoms that you can use to create different types of plots, @sec-plot-geoms.
-
--   How to modify the axes, @sec-axes.
-
--   Things you can do with a plot object other than display it, like save it to disk, @sec-output.
-
-## Fuel economy data {#sec-fuel-economy-data}
-
-In this chapter, we'll mostly use one data set that's bundled with ggplot2: `mpg`.
-It includes information about the fuel economy of popular car models in 1999 and 2008, collected by the US Environmental Protection Agency, <http://fueleconomy.gov>.
-You can access the data by loading ggplot2: \index{Data!mpg@\texttt{mpg}}
+**ggplot2** is based on the **grammar of graphics**, the idea that you can build every graph from the same components: a **data** set, a **coordinate system**, and **geoms**---visual marks that represent data points.
 
 ```{r}
 library(ggplot2)
-mpg
 ```
 
-The variables are mostly self-explanatory:
-
--   `cty` and `hwy` record miles per gallon (mpg) for city and highway driving.
-
--   `displ` is the engine displacement in litres.
-
--   `drv` is the drivetrain: front wheel (f), rear wheel (r) or four wheel (4).
-
--   `model` is the model of car.
-    There are 38 models, selected because they had a new edition every year between 1999 and 2008.
-
--   `class` is a categorical variable describing the "type" of car: two seater, SUV, compact, etc.
-
-This dataset suggests many interesting questions.
-How are engine size and fuel economy related?
-Do certain manufacturers care more about fuel economy than others?
-Has fuel economy improved in the last ten years?
-We will try to answer some of these questions, and in the process learn how to create some basic plots with ggplot2.
-
-### Exercises
-
-1.  List five functions that you could use to get more information about the `mpg` dataset.
-
-2.  How can you find out what other datasets are included with ggplot2?
-
-3.  Apart from the US, most countries use fuel consumption (fuel consumed over fixed distance) rather than fuel economy (distance travelled with fixed amount of fuel).
-    How could you convert `cty` and `hwy` into the European standard of l/100km?
-
-4.  Which manufacturer has the most models in this dataset?
-    Which model has the most variations?
-    Does your answer change if you remove the redundant specification of drive train (e.g. "pathfinder 4wd", "a4 quattro") from the model name?
-
-## Key components {#sec-basic-use}
+### Key components
 
 Every ggplot2 plot has three key components:
 
@@ -85,24 +52,14 @@ Every ggplot2 plot has three key components:
 3.  At least one layer which describes how to render each observation.
     Layers are usually created with a **geom** function.
 
-Here's a simple example: \index{Scatterplot} \indexf{ggplot}
-
 ```{r}
 #| label: qscatter
 ggplot(mpg, aes(x = displ, y = hwy)) + 
   geom_point()
 ```
-
-This produces a scatterplot defined by:
-
-1.  Data: `mpg`.
-2.  Aesthetic mapping: engine size mapped to x position, fuel economy to y position.
-3.  Layer: points.
-
 Pay attention to the structure of this function call: data and aesthetic mappings are supplied in `ggplot()`, then layers are added on with `+`.
-This is an important pattern, and as you learn more about ggplot2 you'll construct increasingly sophisticated plots by adding on more types of components.
 
-Almost every plot maps a variable to `x` and `y`, so naming these aesthetics is tedious, so the first two unnamed arguments to `aes()` will be mapped to `x` and `y`.
+The first two unnamed arguments to `aes()` will be mapped to `x` and `y`.
 This means that the following code is identical to the example above:
 
 ```{r}
@@ -110,512 +67,496 @@ This means that the following code is identical to the example above:
 ggplot(mpg, aes(displ, hwy)) +
   geom_point()
 ```
+To display values, map variables in the data to visual properties of the geom (**aesthetics**) like **size**, **color**, and **x** and **y** locations.
 
-We'll stick to that style throughout the book, so don't forget that the first two arguments to `aes()` are `x` and `y`.
-Note that we've put each command on a new line.
-We recommend doing this in your own code, so it's easy to scan a plot specification and see exactly what's there.
-In this chapter, we'll sometimes use just one line per plot, because it makes it easier to see the differences between plot variations.
+### Complete the template below to build a graph.
 
-The plot shows a strong correlation: as the engine size gets bigger, the fuel economy gets worse.
-There are also some interesting outliers: some cars with large engines get higher fuel economy than average.
-What sort of cars do you think they are?
+ggplot(data = <Data>) +
+  <Geom_Function>(mapping = aes(<Mappings>),
+  stat = <Stat>,
+  position = <Position>) +
+  <Coordinate_Function> +
+  <Facet_Function> +
+  <Scale_Function> +
+  <Theme_Function>
 
-### Exercises
-
-1.  How would you describe the relationship between `cty` and `hwy`?
-    Do you have any concerns about drawing conclusions from that plot?
-
-2.  What does `ggplot(mpg, aes(model, manufacturer)) + geom_point()` show?
-    Is it useful?
-    How could you modify the data to make it more informative?
-
-3.  Describe the data, aesthetic mappings and layers used for each of the following plots.
-    You'll need to guess a little because you haven't seen all the datasets and functions yet, but use your common sense!
-    See if you can predict what the plot will look like before running the code.
-
-    1.  `ggplot(mpg, aes(cty, hwy)) + geom_point()`
-    2.  `ggplot(diamonds, aes(carat, price)) + geom_point()`
-    3.  `ggplot(economics, aes(date, unemploy)) + geom_line()`
-    4.  `ggplot(mpg, aes(cty)) + geom_histogram()`
-
-## Colour, size, shape and other aesthetic attributes {#sec-aesthetics}
-
-To add additional variables to a plot, we can use other aesthetics like colour, shape, and size (NB: while we use British spelling throughout this book, ggplot2 also accepts American spellings).
-These work in the same way as the `x` and `y` aesthetics, and are added into the call to `aes()`: \index{Aesthetics} \indexf{aes}
-
--   `aes(displ, hwy, colour = class)`
--   `aes(displ, hwy, shape = drv)`
--   `aes(displ, hwy, size = cyl)`
-
-ggplot2 takes care of the details of converting data (e.g., 'f', 'r', '4') into aesthetics (e.g., 'red', 'yellow', 'green') with a **scale**.
-There is one scale for each aesthetic mapping in a plot.
-The scale is also responsible for creating a guide, an axis or legend, that allows you to read the plot, converting aesthetic values back into data values.
-For now, we'll stick with the default scales provided by ggplot2.
-You'll learn how to override them in @sec-scale-colour.
-
-To learn more about those outlying variables in the previous scatterplot, we could map the class variable to colour:
+Data, a Geom Function, and Aes Mappings are required. Stat, Position, and the Coordinate, Facet, Scale, and Theme functions are not required and will supply sensible defaults.
 
 ```{r}
-#| label: qplot-aesthetics
-ggplot(mpg, aes(displ, hwy, colour = class)) + 
-  geom_point()
+ggplot(data = mpg, aes(x = cty, y = hwy)) #Begins a plot that you finish by adding layers to. Add one geom function per layer.
+
+last_plot() #Returns the last plot.
+
+ggsave("plot.png", width = 5, height = 5) # Saves last plot as 5' x 5' file named "plot.png" in working directory. Matches file type to file extension.
 ```
 
-This gives each point a unique colour corresponding to its class.
-The legend allows us to read data values from the colour, showing us that the group of cars with unusually high fuel economy for their engine size are two seaters: cars with big engines, but lightweight bodies.
+## Aes
 
-If you want to set an aesthetic to a fixed value, without scaling it, do so in the individual layer outside of `aes()`.
-Compare the following two plots: \index{Aesthetics!setting}
+Common aesthetic values.
+
+-   `color` and `fill`: String (`"red"`, `"#RRGGBB"`).
+
+-   `linetype`: Integer or string (0 = `"blank"`, 1 = `"solid"`, 2 = `"dashed"`, 3 = `"dotted"`, 4 = `"dotdash"`, 5 = `"longdash"`, 6 = `"twodash"`).
+
+-   `size`: Integer (in mm for size of points and text).
+
+-   `linewidth`: Integer (in mm for widths of lines).
+
+-   `shape`: Integer/shape name or a single character (`"a"`).
+
+    -   `shape` integer/name pairs: 0 = `"square open"`, 1 = `"circle open"`, 2 = `"triangle open"`, 3 = `"plus"`, 4 = `"cross"`, 5 = `"diamond open"`, 6 = `"triangle down open"`, 7 = `"square cross"`, 8 = `"asterisk"`, 9 = `"diamond plus"`, 10 = `"circle plus"`, 11 = `"star"`, 12 = `"square plus"`, 13 = `"circle cross"`, 14 = `"square triangle"`, 15 = `"square"`, 16 = `"circle"`, 17 = `"triangle"`, 18 = `"diamond"`, 19 = `"circle small"`, 20 = `"bullet"`, 21 = `"circle filled"`, 22 = `"square filled"`, 23 = `"diamond filled"`, 24 = `"triangle filled"`, 25 = `"triangle down filled"`
+
+## Geoms
+
+Use a geom function to represent data points, use the geom's aesthetic properties to represent variables. Each function returns a layer.
+
+### Graphical Primitives
 
 ```{r}
-#| layout-ncol: 2
-#| fig-width: 4
-ggplot(mpg, aes(displ, hwy)) + geom_point(aes(colour = "blue"))
-ggplot(mpg, aes(displ, hwy)) + geom_point(colour = "blue")
+a <- ggplot(economics, aes(date, unemploy))
+
+b <- ggplot(seals, aes(x = long, y = lat))
 ```
 
-In the first plot, the value "blue" is scaled to a pinkish colour, and a legend is added.
-In the second plot, the points are given the R colour blue.
-This is an important technique and you'll learn more about it in @sec-setting-mapping.
-See `vignette("ggplot2-specs")` for the values needed for colour and other aesthetics.
+-   `a + geom_blank()` and `a + expand_limits()`: Ensure limits include values across all plots.
 
-Different types of aesthetic attributes work better with different types of variables.
-For example, colour and shape work well with categorical variables, while size works well for continuous variables.
-The amount of data also makes a difference: if there is a lot of data it can be hard to distinguish different groups.
-An alternative solution is to use faceting, as described next.
+-   `b + geom_curve(aes(yend = lat + 1, xend = long + 1), curvature = 1)`: Draw a curved line from `(x, y)` to `(xend, yend)`. `aes()` arguments: `x`, `xend`, `y`, `yend`, `alpha`, `angle`, `color`, `curvature`, `linetype`, `size`.
 
-When using aesthetics in a plot, less is usually more.
-It's difficult to see the simultaneous relationships among colour and shape and size, so exercise restraint when using aesthetics.
-Instead of trying to make one very complex plot that shows everything at once, see if you can create a series of simple plots that tell a story, leading the reader from ignorance to knowledge.
+-   `a + geom_path(lineend = "butt", linejoin = "round", linemitre = 1)`: Connect observations in the order they appear. `aes()` arguments: `x`, `y`, `alpha`, `color`, `group`, `linetype`, `size`.
 
-### Exercises
+-   `a + geom_polygon(aes(alpha = 50))`: Connect points into polygons. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`, `group`, `subgroup`, `linetype`, `size`.
 
-1.  Experiment with the colour, shape and size aesthetics.
-    What happens when you map them to continuous values?
-    What about categorical values?
-    What happens when you use more than one aesthetic in a plot?
+-   `b + geom_rect(aes(xmin = long, ymin = lat, xmax = long + 1, ymax = lat + 1))`: Draw a rectangle by connecting four corners (`xmin`, `xmax`, `ymin`, `ymax`). `aes()` arguments: `xmax`, `xmin`, `ymax`, `ymin`, `alpha`, `color`, `fill`, `linetype`, `size`.
 
-2.  What happens if you map a continuous variable to shape?
-    Why?
-    What happens if you map `trans` to shape?
-    Why?
+-   `a + geom_ribbon(aes(ymin = unemploy - 900, ymax = unemploy + 900)`: For each `x`, plot an interval from `ymin` to `ymax`. `aes()` arguments: `x`, `ymax`, `ymin`, `alpha`, `color`, `fill`, `group`, `linetype`, `size`.
 
-3.  How is drive train related to fuel economy?
-    How is drive train related to engine size and class?
+#### Line Segments
 
-## Faceting {#sec-qplot-faceting}
+Common aesthetics: `x`, `y`, `alpha`, `color`, `linetype`, `size`, `linewidth`.
 
-Another technique for displaying additional categorical variables on a plot is faceting.
-Faceting creates tables of graphics by splitting the data into subsets and displaying the same graph for each subset.
-You'll learn more about faceting in @sec-facet, but it's such a useful technique that you need to know it right away.
-\index{Faceting}
+-   `b + geom_abline(aes(intercept = 0, slope = 1))`: Draw a diagonal reference line with a given `slope` and `intercept`.
 
-There are two types of faceting: grid and wrapped.
-Wrapped is the most useful, so we'll discuss it here, and you can learn about grid faceting later.
-To facet a plot you simply add a faceting specification with `facet_wrap()`, which takes the name of a variable preceded by `~`.
-\indexf{facet\_wrap}
+-   `b + geom_hline(aes(yintercept = lat))`: Draw a horizontal reference line with a given `yintercept`.
+
+-   `b + geom_vline(aes(xintercept = long))`: Draw a vertical reference line with a given `xintercept`.
+
+-   `b + geom_segment(aes(yend = lat + 1, xend = long + 1))`: Draw a straight line from `(x, y)` to `(xend, yend)`.
+
+-   `b + geom_spoke(aes(angle = 1:1155, radius = 1))`: Draw line segments using polar coordinates (`angle` and `radius`).
+
+### One Variable - Continuous
 
 ```{r}
-#| label: facet
-ggplot(mpg, aes(displ, hwy)) + 
-  geom_point() + 
-  facet_wrap(~class)
+c <- ggplot(mpg, aes(hwy))
+c2 <- ggplot(mpg)
 ```
 
-You might wonder when to use faceting and when to use aesthetics.
-You'll learn more about the relative advantages and disadvantages of each in @sec-group-vs-facet.
+-   `c + geom_area(stat = "bin")`: Draw an area plot. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`, `linetype`, `linewidth`.
 
-### Exercises
+-   `c + geom_density(kernel = "gaussian")`: Compute and draw kernel density estimates. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`, `group`, `linetype`, `linewidth`, `weight`.
 
-1.  What happens if you try to facet by a continuous variable like `hwy`?
-    What about `cyl`?
-    What's the key difference?
+-   `c + geom_dotplot()`: Draw a dot plot. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`.
 
-2.  Use faceting to explore the 3-way relationship between fuel economy, engine size, and number of cylinders.
-    How does faceting by number of cylinders change your assessement of the relationship between engine size and fuel economy?
+-   `c + geom_freqpoly()`: Draw a frequency polygon. `aes()` arguments: `x`, `y`, `alpha`, `color`, `group`, `linetype`, `linewidth`.
 
-3.  Read the documentation for `facet_wrap()`.
-    What arguments can you use to control how many rows and columns appear in the output?
+-   `c + geom_histogram(binwidth = 5)`: Draw a histogram. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`, `linetype`, `linewidth`, `weight`.
 
-4.  What does the `scales` argument to `facet_wrap()` do?
-    When might you use it?
+-   `c2 + geom_qq(aes(sample = hwy))`: Draw a quantile-quantile plot. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`, `linetype`, `size`, `weight`.
 
-## Plot geoms {#sec-plot-geoms}
-
-You might guess that by substituting `geom_point()` for a different geom function, you'd get a different type of plot.
-That's a great guess!
-In the following sections, you'll learn about some of the other important geoms provided in ggplot2.
-This isn't an exhaustive list, but should cover the most commonly used plot types.
-You'll learn more in @sec-individual-geoms and @sec-collective-geoms.
-
--   `geom_smooth()` fits a smoother to the data and displays the smooth and its standard error.
-
--   `geom_boxplot()` produces a box-and-whisker plot to summarise the distribution of a set of points.
-
--   `geom_histogram()` and `geom_freqpoly()` show the distribution of continuous variables.
-
--   `geom_bar()` shows the distribution of categorical variables.
-
--   `geom_path()` and `geom_line()` draw lines between the data points.
-    A line plot is constrained to produce lines that travel from left to right, while paths can go in any direction.
-    Lines are typically used to explore how things change over time.
-
-### Adding a smoother to a plot {#sec-smooth}
-
-If you have a scatterplot with a lot of noise, it can be hard to see the dominant pattern.
-In this case it's useful to add a smoothed line to the plot with `geom_smooth()`: \index{Smoothing} \indexf{geom\_smooth}
+### One Variable - Discrete
 
 ```{r}
-#| label: qplot-smooth
-ggplot(mpg, aes(displ, hwy)) + 
-  geom_point() + 
-  geom_smooth()
+d <- ggplot(mpg, aes(fl))
 ```
 
-This overlays the scatterplot with a smooth curve, including an assessment of uncertainty in the form of point-wise confidence intervals shown in grey.
-If you're not interested in the confidence interval, turn it off with `geom_smooth(se = FALSE)`.
+-   `d + geom_bar()`: Draw a bar chart. `aes()` arguments: `x`, `alpha`, `color`, `fill`, `linetype`, `linewidth`, `weight`.
 
-An important argument to `geom_smooth()` is the `method`, which allows you to choose which type of model is used to fit the smooth curve:
-
--   `method = "loess"`, the default for small n, uses a smooth local regression (as described in `?loess`).
-    The wiggliness of the line is controlled by the `span` parameter, which ranges from 0 (exceedingly wiggly) to 1 (not so wiggly).
-
-    ```{r}
-    #| label: smooth-loess
-    #| fig.align: default
-    #| layout-ncol: 2
-    #| fig-width: 4
-    ggplot(mpg, aes(displ, hwy)) + 
-      geom_point() + 
-      geom_smooth(span = 0.2)
-
-    ggplot(mpg, aes(displ, hwy)) + 
-      geom_point() + 
-      geom_smooth(span = 1)
-    ```
-
-    Loess does not work well for large datasets (it's $O(n^2)$ in memory), so an alternative smoothing algorithm is used when $n$ is greater than 1,000.
-
--   `method = "gam"` fits a generalised additive model provided by the **mgcv** package.
-    You need to first load mgcv, then use a formula like `formula = y ~ s(x)` or `y ~ s(x, bs = "cs")` (for large data).
-    This is what ggplot2 uses when there are more than 1,000 points.
-    \index{mgcv}
-
-    ```{r}
-    #| label: smooth-gam
-    #| message: false
-    #| fig.align: default
-    library(mgcv)
-    ggplot(mpg, aes(displ, hwy)) + 
-      geom_point() + 
-      geom_smooth(method = "gam", formula = y ~ s(x))
-    ```
-
--   `method = "lm"` fits a linear model, giving the line of best fit.
-
-    ```{r}
-    #| label: smooth-lm
-    #| fig.align: default
-    ggplot(mpg, aes(displ, hwy)) + 
-      geom_point() + 
-      geom_smooth(method = "lm")
-    ```
-
--   `method = "rlm"` works like `lm()`, but uses a robust fitting algorithm so that outliers don't affect the fit as much.
-    It's part of the **MASS** package, so remember to load that first.
-    \index{MASS}
-
-### Boxplots and jittered points {#sec-boxplot}
-
-When a set of data includes a categorical variable and one or more continuous variables, you will probably be interested to know how the values of the continuous variables vary with the levels of the categorical variable.
-Say we're interested in seeing how fuel economy varies within cars that have the same kind of drivetrain.
-We might start with a scatterplot like this:
+### Two Variables - Both Continuous
 
 ```{r}
-ggplot(mpg, aes(drv, hwy)) + 
-  geom_point()
+e <- ggplot(mpg, aes(cty, hwy))
 ```
 
-Because there are few unique values of both `drv` and `hwy`, there is a lot of overplotting.
-Many points are plotted in the same location, and it's difficult to see the distribution.
-There are three useful techniques that help alleviate the problem:
+-   `e + geom_label(aes(label = cty), nudge_x = 1, nudge_y = 1)`: Add text with a rectangle background. `aes()` arguments: - `x`, `y`, `label`, `alpha`, `angle`, `color`, `family`, `fontface`, `hjust`, `lineheight`, `size`, `vjust`.
 
--   Jittering, `geom_jitter()`, adds a little random noise to the data which can help avoid overplotting.
-    \index{Jittering} \indexf{geom\_jitter}
+-   `e + geom_point()`: Draw a scatter plot. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`, `shape`, `size`, `stroke`.
 
--   Boxplots, `geom_boxplot()`, summarise the shape of the distribution with a handful of summary statistics.
-    \index{Boxplot} \indexf{geom\_boxplot}
+-   `e + geom_quantile()`: Fit and draw quantile regression for the plot data. `aes()` arguments: `x`, `y`, `alpha`, `color`, `group`, `linetype`, `linewidth`, `weight`.
 
--   Violin plots, `geom_violin()`, show a compact representation of the "density" of the distribution, highlighting the areas where more points are found.
-    \index{Violin plot} \indexf{geom\_violin}
+-   `e + geom_rug(sides = "bl")`: Draw a rug plot. `aes()` arguments: `x`, `y`, `alpha`, `color`, `linetype`, `linewidth`.
 
-These are illustrated below:
+-   `e + geom_smooth(method = lm)`: Plot smoothed conditional means. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`, `group`, `linetype`, `linewidth`, `weight`.
+
+-   `e + geom_text(aes(label = cty), nudge_x = 1, nudge_y = 1)`: Add text to a plot. `aes()` arguments: `x`, `y`, `label`, `alpha`, `angle`, `color`, `family`, `fontface`, `hjust`, `lineheight`, `size`, `vjust`.
+
+### Two Variables - One Discrete, One Continuous
 
 ```{r}
-#| label: jitter-boxplot
-#| layout-ncol: 3
-#| fig-width: 3
-ggplot(mpg, aes(drv, hwy)) + geom_jitter()
-ggplot(mpg, aes(drv, hwy)) + geom_boxplot()
-ggplot(mpg, aes(drv, hwy)) + geom_violin()
+f <- ggplot(mpg, aes(class, hwy))
 ```
 
-Each method has its strengths and weaknesses.
-Boxplots summarise the bulk of the distribution with only five numbers, while jittered plots show every point but only work with relatively small datasets.
-Violin plots give the richest display, but rely on the calculation of a density estimate, which can be hard to interpret.
+-   `f + geom_col()`: Draw a bar plot. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`, `group`, `linetype`, `linewidth`.
 
-For jittered points, `geom_jitter()` offers the same control over aesthetics as `geom_point()`: `size`, `colour`, and `shape`.
-For `geom_boxplot()` and `geom_violin()`, you can control the outline `colour` or the internal `fill` colour.
+-   `f + geom_boxplot()`: Draw a box plot. `aes()` arguments: `x`, `y`, `lower`, `middle`, `upper`, `ymax`, `ymin`, `alpha`, `color`, `fill`, `group`, `linetype`, `shape`, `linewidth`, `weight`.
 
-### Histograms and frequency polygons {#sec-distribution}
+-   `f + geom_dotplot(binaxis ="y", stackdir = "center")`: Draw a dot plot. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`, `group`.
 
-Histograms and frequency polygons show the distribution of a single numeric variable.
-They provide more information about the distribution of a single group than boxplots do, at the expense of needing more space.
-\index{Histogram} \indexf{geom\_histogram}
+-   `f + geom_violin(scale = "area")`: Draw a violin plot. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`, `group`, `linetype`, `linewidth`, `weight`.
+
+### Two Variables - Both Discrete
 
 ```{r}
-#| label: dist
-#| layout-ncol: 2
-#| fig-width: 4
-ggplot(mpg, aes(hwy)) + geom_histogram()
-ggplot(mpg, aes(hwy)) + geom_freqpoly()
+g <- ggplot(diamonds, aes(cut, color))
 ```
 
-Both histograms and frequency polygons work in the same way: they bin the data, then count the number of observations in each bin.
-The only difference is the display: histograms use bars and frequency polygons use lines.
+-   `g + geom_count()`: Plot a count of points in an area to address over plotting. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`, `shape`, `size`, `stroke`.
 
-You can control the width of the bins with the `binwidth` argument (if you don't want evenly spaced bins you can use the `breaks` argument).
-It is **very important** to experiment with the bin width.
-The default just splits your data into 30 bins, which is unlikely to be the best choice.
-You should always try many bin widths, and you may find you need multiple bin widths to tell the full story of your data.
+-   `e + geom_jitter(height = 2, width = 2)`: Jitter points in a plot. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`, `shape`, `size`.
+
+### Two Variables - Continuous Bivariate Distribution
 
 ```{r}
-#| layout-ncol: 2
-#| fig-width: 4
-ggplot(mpg, aes(hwy)) + 
-  geom_freqpoly(binwidth = 2.5)
-ggplot(mpg, aes(hwy)) + 
-  geom_freqpoly(binwidth = 1)
+h <- ggplot(diamonds, aes(carat, price))
 ```
 
-An alternative to the frequency polygon is the density plot, `geom_density()`.
-A little care is required if you're using density plots: compared to frequency polygons they are harder to interpret since the underlying computations are more complex.
-They also make assumptions that are not true for all data, namely that the underlying distribution is continuous, unbounded, and smooth.
+-   `h + geom_bin2d(binwidth = c(0.25, 500))`: Draw a heatmap of 2D rectangular bin counts. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`, `linetype`, `size`, `weight`.
 
-To compare the distributions of different subgroups, you can map a categorical variable to either fill (for `geom_histogram()`) or colour (for `geom_freqpoly()`).
-It's easier to compare distributions using the frequency polygon because the underlying perceptual task is easier.
-You can also use faceting: this makes comparisons a little harder, but it's easier to see the distribution of each group.
+-   `h + geom_density_2d()`: Plot contours from 2D kernel density estimation. `aes()` arguments: `x`, `y`, `alpha`, `color`, `group`, `linetype`, `linewidth`.
+
+-   `h + geom_hex()`: Draw a heatmap of 2D hexagonal bin counts. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`, `linewidth`.
+
+### Two Variables - Continuous Function
 
 ```{r}
-#| label: dist-fill
-#| layout-ncol: 2
-#| fig-width: 4
-ggplot(mpg, aes(displ, colour = drv)) + 
-  geom_freqpoly(binwidth = 0.5)
-ggplot(mpg, aes(displ, fill = drv)) + 
-  geom_histogram(binwidth = 0.5) + 
-  facet_wrap(~drv, ncol = 1)
+i <- ggplot(economics, aes(date, unemploy))
 ```
 
-### Bar charts {#sec-bar}
+-   `i + geom_area()`: Draw an area plot. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`, `linetype`, `linewidth`.
 
-The discrete analogue of the histogram is the bar chart, `geom_bar()`.
-It's easy to use: \index{Barchart} \indexf{geom\_bar}
+-   `i + geom_line()`: Connect data points, ordered by the x axis variable. `aes()` arguments: `x`, `y`, `alpha`, `color`, `group`, `linetype`, `linewidth`.
+
+-   `i + geom_step(direction = "hv"`: Draw a stairstep plot. `aes()` arguments: `x`, `y`, `alpha`, `color`, `group`, `linetype`, `linewidth`.
+
+### Two Variables - Visualizing Error
 
 ```{r}
-#| label: dist-bar
-ggplot(mpg, aes(manufacturer)) + 
-  geom_bar()
+df <- data.frame(grp = c("A", "B"), fit = 4:5, se = 1:2)
+j <- ggplot(df, aes(grp, fit, ymin = fit - se, ymax = fit + se))
 ```
 
-(You'll learn how to fix the labels in @sec-theme-axis).
+-   `j + geom_crossbar(fatten = 2)`: Draw a crossbar. `aes()` arguments: `x`, `y`, `ymax`, `ymin`, `alpha`, `color`, `fill`, `group`, `linetype`, `linewidth`.
 
-Bar charts can be confusing because there are two rather different plots that are both commonly called bar charts.
-The above form expects you to have unsummarised data, and each observation contributes one unit to the height of each bar.
-The other form of bar chart is used for presummarised data.
-For example, you might have three drugs with their average effect:
+-   `j + geom_errorbar()`: Draw an errorbar. Also `geom_errorbarh()`. `aes()` arguments: `x`, `ymax`, `ymin`, `alpha`, `color`, `group`, `linetype`, `linewidth`, `width`.
+
+-   `j + geom_linerange()`: Draw a line range. `aes()` arguments: `x`, `ymin`, `ymax`, `alpha`, `color`, `group`, `linetype`, `linewidth`.
+
+-   `j + geom_pointrange()`: Draw a point range. `aes()` arguments: `x`, `y`, `ymin`, `ymax`, `alpha`, `color`, `fill`, `group`, `linetype`, `shape`, `linewidth`.
+
+### Two Variables - Maps
+
+Draw the appropriate geometric object depending on the simple features present in the data. `aes()` arguments: `map_id`, `alpha`, `color`, `fill`, `linetype`, `linewidth`.
 
 ```{r}
-drugs <- data.frame(
-  drug = c("a", "b", "c"),
-  effect = c(4.2, 9.7, 6.1)
+nc <- sf::st_read(system.file("shape/nc.shp", package = "sf"))
+ggplot(nc) +
+  geom_sf(aes(fill = AREA))
+```
+
+### Three Variables
+
+```{r}
+seals$z <- with(seals, sqrt(delta_long^2 + delta_lat^2))
+l <- ggplot(seals, aes(long, lat))
+```
+
+-   `l + geom_contour(aes(z = z))`: Draw 2D contour plot. `aes()` arguments: `x`, `y`, `z`, `alpha`, `color`, `group`, `linetype`, `linewidth`, `weight`.
+
+-   `l + geom_contour_filled(aes(fill = z))`: Draw 2D contour plot with the space between lines filled. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`, `group`, `linetype`, `linewidth`, `subgroup`.
+
+-   `l + geom_raster(aes(fill = z), hjust = 0.5, vjust = 0.5, interpolate = FALSE)`: Draw a raster plot. `aes()` arguments: `x`, `y`, `alpha`, `fill`.
+
+-   `l + geom_tile(aes(fill = z))`: Draw a tile plot. `aes()` arguments: `x`, `y`, `alpha`, `color`, `fill`, `linetype`, `linewidth`, `width`.
+
+<!-- Page 2 -->
+
+## Stats
+
+An alternative way to build a layer.
+
+A stat builds new variables to plot (e.g., count, prop).
+
+Visualize a stat by changing the default stat of a geom function, `geom_bar(stat = "count")`, or by using a stat function, `stat_count(geom = "bar")`, which calls a default geom to make a layer (equivalent to a geom function). Use `after_stat(name)` syntax to map the stat variable `name` to an aesthetic.
+
+```{r}
+i + stat_density_2d(aes(fill = after_stat(level)), geom = "polygon")
+```
+
+In this example, `"polygon"` is the geom to use, `stat_density_2d()` is the stat function, `aes()` contains the geom mappings, and `level` is the variable created by stat.
+
+-   `c + stat_bin(binwidth = 1, boundary = 10)`: `x`, `y` \| `count`, `ncount`, `density`, `ndensity`
+
+-   `c + stat_count(width = 1)`: `x`, `y` \| `count`, `density`
+
+-   `c + stat_density(adjust = 1, kernel = "gaussian")`: `x`, `y` \| `count`, `density`, `scaled`
+
+-   `e + stat_bin_2d(bins = 30, drop = T)`: `x`, `y`, `fill` \| `count`, `density`
+
+-   `e + stat_bin_hex(bins =30)`: `x`, `y`, `fill` \| `count`, `density`
+
+-   `e + stat_density_2d(contour = TRUE, n = 100)`: `x`, `y`, `color`, `linewidth` \| `level`
+
+-   `e + stat_ellipse(level = 0.95, segments = 51, type = "t")`
+
+-   `l + stat_contour(aes(z = z))`: `x`, `y`, `z`, `order` \| `level`
+
+-   `l + stat_summary_hex(aes(z = z), bins = 30, fun = max)`: `x`, `y`, `z`, `fill` \| `value`
+
+-   `l + stat_summary_2d(aes(z = z), bins = 30, fun = mean)`: `x`, `y`, `z`, `fill` \| `value`
+
+-   `f + stat_boxplot(coef = 1.5)`: `x`, `y` \| `lower`, `middle`, `upper`, `width`, `ymin`, `ymax`
+
+-   `f + stat_ydensity(kernel = "gaussian", scale = "area")`: `x`, `y` \| `density`, `scaled`, `count`, `n`, `violinwidth`, `width`
+
+-   `e + stat_ecdf(n = 40)`: `x`, `y` \| `x`, `y`
+
+-   `e + stat_quantile(quantiles = c(0.1, 0.9), formula = y ~ log(x), method = "rq")`: `x`, `y` \| `quantile`
+
+-   `e + stat_smooth(method = "lm", formula = y ~ x, se = T, level = 0.95)`: `x`, `y` \| `se`, `x`, `y`, `ymin`, `ymax`
+
+-   `ggplot() + xlim(-5, 5) + stat_function(fun = dnorm, n = 20, geom = "point")`: `x` \| `x`, `y`
+
+-   `ggplot() + stat_qq(aes(sample = 1:100))`: `x`, `y`, `sample` \| `sample`, `theoretical`
+
+-   `e + stat_sum()`: `x`, `y`, `size` \| `n`, `prop`
+
+-   `e + stat_summary(fun.data = "mean_cl_boot")`
+
+-   `h + stat_summary_bin(fun = "mean", geom = "bar")`
+
+-   `e + stat_identity()`
+
+-   `e + stat_unique()`
+
+## Scales
+
+Override defaults with **scales** package.
+
+**Scales** map data values to the visual values of an aesthetic. To change a mapping, add a new scale.
+
+```{r}
+n <- d + geom_bar(aes(fill = fl))
+
+n + scale_fill_manual(
+  values = c("skyblue", "royalblue", "blue", "navy"),
+  limits = c("d", "e", "p", "r"),
+  breaks =c("d", "e", "p", "r"),
+  name = "fuel", 
+  labels = c("D", "E", "P", "R")
 )
 ```
 
-To display this sort of data, you need to tell `geom_bar()` to not run the default stat which bins and counts the data.
-However, we think it's even better to use `geom_point()` because points take up less space than bars, and don't require that the y axis includes 0.
+In this example, `scale_` specifies a scale function, `fill` is the aesthetic to adjust, and `manual` is the prepackaged scale to use.
+
+`values` contains scale-specific arguments, `limits` specifies the range of values to include in mappings, `breaks` specifies the breaks to use in legend/axis, and `name` and `labels` specify the title and labels to use in the legend/axis.
+
+### General Purpose Scales
+
+Use with most aesthetics.
+
+-   `scale_*_continuous()`: Map continuous values to visual ones.
+
+-   `scale_*_discrete()`: Map discrete values to visual ones.
+
+-   `scale_*_binned()`: Map continuous values to discrete bins.
+
+-   `scale_*_identity()`: Use data values as visual ones.
+
+-   `scale_*_manual(values = c())`: Map discrete values to manually chosen visual ones.
+
+-   `scale_*_date(date_labels = "%m/%d", date_breaks = "2 weeks")`: Treat data values as dates.
+
+-   `scale_*_datetime()`: Treat data values as date times. Same as `scale_*_date()`. See `?strptime` for label formats.
+
+### X & Y Location Scales
+
+Use with x or y aesthetics (x shown here).
+
+-   `scale_x_log10()`: Plot `x` on log10 scale.
+
+-   `scale_x_reverse()`: Reverse the direction of the x axis.
+
+-   `scale_x_sqrt()`: Plot `x` on square root scale.
+
+### Color and Fill Scales (Discrete)
+
+-   `n + scale_fill_brewer(palette = "Blues")`: Use color scales from ColorBrewer. For palette choices `RColorBrewer::display.brewer.all()`.
+
+-   `n + scale_fill_grey(start = 0.2, end = 0.8, na.value = "red")`: Use a grey gradient color scale.
+
+### Color and Fill Scales (Continuous)
 
 ```{r}
-#| layout-ncol: 2
-#| fig-width: 4
-ggplot(drugs, aes(drug, effect)) + geom_bar(stat = "identity")
-ggplot(drugs, aes(drug, effect)) + geom_point()
+o <- c + geom_dotplot(aes(fill = ..x..))
 ```
 
-### Time series with line and path plots {#sec-line}
+-   `o + scale_fill_distiller(palette = "Blues")`: Interpolate a palette into a continuous scale.
 
-Line and path plots are typically used for time series data.
-Line plots join the points from left to right, while path plots join them in the order that they appear in the dataset (in other words, a line plot is a path plot of the data sorted by x value).
-Line plots usually have time on the x-axis, showing how a single variable has changed over time.
-Path plots show how two variables have simultaneously changed over time, with time encoded in the way that observations are connected.
+-   `o + scale_fill_gradient(low = "red", high = "yellow")`: Create a two color gradient.
 
-Because the year variable in the `mpg` dataset only has two values, we'll show some time series plots using the `economics` dataset, which contains economic data on the US measured over the last 40 years.
-The figure below shows two plots of unemployment over time, both produced using `geom_line()`.
-The first shows the unemployment rate while the second shows the median number of weeks unemployed.
-We can already see some differences in these two variables, particularly in the last peak, where the unemployment percentage is lower than it was in the preceding peaks, but the length of unemployment is high.
-\indexf{geom\_line} \indexf{geom\_path} \index{Data!economics@\texttt{economics}}
+-   `o + scale_fill_gradient2(low = "red", high = "blue", mid = "white", midpoint = 25)`: Create a diverging color gradient.
+
+-   `o + scale_fill_gradientn(colors = topo.colors(6))`: Create a n-color gradient. Also `rainbow()`, `heat.colors()`, `terrain.colors()`, `cm.colors()`, `RColorBrewer::brewer.pal()`.
+
+### Shape and Size Scales
 
 ```{r}
-#| label: line-employment
-#| layout-ncol: 2
-#| fig-width: 4
-ggplot(economics, aes(date, unemploy / pop)) +
-  geom_line()
-ggplot(economics, aes(date, uempmed)) +
-  geom_line()
+p <- e + geom_point(aes(shape = fl, size = cyl))
 ```
 
-To examine this relationship in greater detail, we would like to draw both time series on the same plot.
-We could draw a scatterplot of unemployment rate vs. length of unemployment, but then we could no longer see the evolution over time.
-The solution is to join points adjacent in time with line segments, forming a *path* plot.
+-   `p + scale_shape() + scale_size()`: Map discrete values to shape and size aesthetics.
 
-Below we plot unemployment rate vs. length of unemployment and join the individual observations with a path.
-Because of the many line crossings, the direction in which time flows isn't easy to see in the first plot.
-In the second plot, we colour the points to make it easier to see the direction of time.
+-   `p + scale_shape_manual(values = c(3:7))`: Map discrete values to specified shape values.
+
+-   `p + scale_radius(range = c(1,6))`: Map values to a shape's radius.
+
+-   `p + scale_size_area(max_size = 6)`: Like `scale_size()` but maps zero values to zero size.
+
+Shapes used here are the same as the ones listed in the Aes section.
+
+## Coordinate Systems
 
 ```{r}
-#| label: path-employ
-#| layout-ncol: 2
-#| fig-width: 4
-ggplot(economics, aes(unemploy / pop, uempmed)) + 
-  geom_path() +
-  geom_point()
-
-year <- function(x) as.POSIXlt(x)$year + 1900
-ggplot(economics, aes(unemploy / pop, uempmed)) + 
-  geom_path(colour = "grey50") +
-  geom_point(aes(colour = year(date)))
+u <- d + geom_bar()
 ```
 
-We can see that unemployment rate and length of unemployment are highly correlated, but in recent years the length of unemployment has been increasing relative to the unemployment rate.
+-   `u + coord_cartesian(xlim = c(0, 5))`: `xlim`, `ylim`. The default Cartesian coordinate system.
 
-With longitudinal data, you often want to display multiple time series on each plot, each series representing one individual.
-To do this you need to map the `group` aesthetic to a variable encoding the group membership of each observation.
-This is explained in more depth in @sec-collective-geoms.
-\index{Longitudinal data|see{Data, longitudinal}} \index{Data!longitudinal}
+-   `u + coord_fixed(ratio = 1/2)`: `ratio`, `xlim`, `ylim`. Cartesian coordinates with fixed aspect ration between x and y units.
 
-### Exercises
+-   `ggplot(mpg, aes(y = fl)) + geom_bar()`: Flip Cartesian coordinates by switching x and y aesthetic mappings.
 
-1.  What's the problem with the plot created by `ggplot(mpg, aes(cty, hwy)) + geom_point()`?
-    Which of the geoms described above is most effective at remedying the problem?
+-   `u + coord_polar(theta = "x", direction = 1)`: `theta`, `start`, `direction`. Polar coordinates.
 
-2.  One challenge with `ggplot(mpg, aes(class, hwy)) + geom_boxplot()` is that the ordering of `class` is alphabetical, which is not terribly useful.
-    How could you change the factor levels to be more informative?
+-   `u + coord_trans(y = "sqrt")`: `x`, `y`, `xlim`, `ylim`. Transformed Cartesian coordinates. Set `xtrans` and `ytrans` to the name of a window function.
 
-    Rather than reordering the factor by hand, you can do it automatically based on the data: `ggplot(mpg, aes(reorder(class, hwy), hwy)) + geom_boxplot()`.
-    What does `reorder()` do?
-    Read the documentation.
+-   `π + coord_sf()`: `xlim`, `ylim`, `crs`. Ensures all layers use a common Coordinate Reference System.
 
-3.  Explore the distribution of the carat variable in the `diamonds` dataset.
-    What binwidth reveals the most interesting patterns?
+## Position Adjustments
 
-4.  Explore the distribution of the price variable in the `diamonds` data.
-    How does the distribution vary by cut?
-
-5.  You now know (at least) three ways to compare the distributions of subgroups: `geom_violin()`, `geom_freqpoly()` and the colour aesthetic, or `geom_histogram()` and faceting.
-    What are the strengths and weaknesses of each approach?
-    What other approaches could you try?
-
-6.  Read the documentation for `geom_bar()`.
-    What does the `weight` aesthetic do?
-
-7.  Using the techniques already discussed in this chapter, come up with three ways to visualise a 2d categorical distribution.
-    Try them out by visualising the distribution of `model` and `manufacturer`, `trans` and `class`, and `cyl` and `trans`.
-
-## Modifying the axes {#sec-axes}
-
-You'll learn the full range of options available in later chapters, but two families of useful helpers let you make the most common modifications.
-`xlab()` and `ylab()` modify the x- and y-axis labels: \indexf{xlab} \indexf{ylab}
+Position adjustments determine how to arrange geoms that would otherwise occupy the same space.
 
 ```{r}
-#| layout-ncol: 3
-#| fig-width: 3
-ggplot(mpg, aes(cty, hwy)) +
-  geom_point(alpha = 1 / 3)
-
-ggplot(mpg, aes(cty, hwy)) +
-  geom_point(alpha = 1 / 3) + 
-  xlab("city driving (mpg)") + 
-  ylab("highway driving (mpg)")
-
-# Remove the axis labels with NULL
-ggplot(mpg, aes(cty, hwy)) +
-  geom_point(alpha = 1 / 3) + 
-  xlab(NULL) + 
-  ylab(NULL)
+s <- ggplot(mpg, aes(fl, fill = drv))
 ```
 
-`xlim()` and `ylim()` modify the limits of axes: \indexf{xlim} \indexf{ylim}
+-   `s + geom_bar(position = "dodge")`: Arrange elements side by side.
+
+-   `s + geom_bar(position = "fill")`: Stack elements on top of one another, normalize height.
+
+-   `e + geom_point(position = "jitter")`: Add random noise to X and Y position of each element to avoid over plotting.
+
+-   `e + geom_label(position = "nudge")`: Nudge labels away from points.
+
+-   `s + geom_bar(position = "stack")`: Stack elements on top of one another.
+
+Each position adjustment can be recast as a function with manual `width` and `height` arguments:
 
 ```{r}
-#| layout-ncol: 3
-#| fig-width: 3
-ggplot(mpg, aes(drv, hwy)) +
-  geom_jitter(width = 0.25)
-
-ggplot(mpg, aes(drv, hwy)) +
-  geom_jitter(width = 0.25) + 
-  xlim("f", "r") + 
-  ylim(20, 30)
-  
-# For continuous scales, use NA to set only one limit
-ggplot(mpg, aes(drv, hwy)) +
-  geom_jitter(width = 0.25, na.rm = TRUE) + 
-  ylim(NA, 30)
+s + geom_bar(position = position_dodge(width = 1))
 ```
 
-Changing the axes limits sets values outside the range to `NA`.
-You can suppress the associated warning with `na.rm = TRUE`, but be careful.
-If your plot calculates summary statistics (e.g., sample mean), this conversion to `NA` occurs *before* the summary statistics are computed, and may lead to undesirable results in some situations.
+## Themes
 
-## Output {#sec-output}
+-   `u + theme_bw()`: White background with grid lines.
 
-Most of the time you create a plot object and immediately plot it, but you can also save a plot to a variable and manipulate it:
+-   `u + theme_gray()`: Grey background with white grid lines (default theme).
+
+-   `u + theme_dark()`: Dark grey background and grid lines for contrast.
+
+-   `u + theme_classic()`: No grid lines.
+
+-   `u + theme_light()`: Light grey axes and grid lines.
+
+-   `u + theme_linedraw()`: Uses only black lines.
+
+-   `u + theme_minimal()`: Minimal theme.
+
+-   `u + theme_void()`: Empty theme.
+
+-   `u + theme()`: Customize aspects of the theme such as axis, legend, panel, and facet properties.
 
 ```{r}
-#| label: variable
-p <- ggplot(mpg, aes(displ, hwy, colour = factor(cyl))) +
-  geom_point()
+u + labs(title = "Title") + theme(plot.title.position = "plot")
+        
+u + theme(panel.background = element_rect(fill = "blue"))
 ```
 
-Once you have a plot object, there are a few things you can do with it:
+## Faceting
 
--   Render it on screen with `print()`.
-    This happens automatically when running interactively, but inside a loop or function, you'll need to `print()` it yourself.
-    \indexf{print}
-
-    ```{r}
-    print(p)
-    ```
-
--   Save it to disk with `ggsave()`, described in @sec-saving.
-
-    ```{r}
-    #| eval: false
-    # Save png to disk
-    ggsave("plot.png", p, width = 5, height = 5)
-    ```
-
--   Briefly describe its structure with `summary()`.
-    \indexf{summary}
-
-    ```{r}
-    summary(p)
-    ```
+Facets divide a plot into subplots based on the values of one or more discrete variables.
 
 ```{r}
-#| include: false
-unlink("plot.png")
+t <- ggplot(mpg, aes(cty, hwy)) + geom_point()
 ```
 
-You'll learn more about how to manipulate these objects in @sec-programming.
+-   `t + facet_grid(. ~ fl)`: Facet into a column based on fl.
+
+-   `t + facet_grid(year ~ .)`: Facet into rows based on year.
+
+-   `t + facet_grid(year ~ fl)`: Facet into both rows and columns.
+
+-   `t + facet_wrap(~ fl)`: Wrap facets into a rectangular layout.
+
+-   `t + facet_grid(drv ~ fl, scales = "free")`: Set **scales** to let axis limits vary across facets. Also `"free_x"` for x axis limits adjust to individual facets and `"free_y"` for y axis limits adjust to individual facets.
+
+Set **labeller** to adjust facet label:
+
+-   `t + facet_grid(. ~ fl, labeller = label_both)`: Labels each facet as "fl: c", "fl: d", etc.
+
+-   `t + facet_grid(fl ~ ., labeller = label_bquote(alpha ^ .(fl)))`: Labels each facet as "𝛼^c^", "𝛼^d^", etc.
+
+## Labels and Legends
+
+Use `labs()` to label elements of your plot.
+
+```         
+t + labs(x = "New x axis label", 
+  y = "New y axis label",
+  title ="Add a title above the plot",
+  subtitle = "Add a subtitle below title",
+  caption = "Add a caption below plot",
+  alt = "Add alt text to the plot",
+  <Aes> = "New <Aes> legend title")
+```
+
+-   `t + annotate(geom = "text", x = 8, y = 9, label = "A")`: Places a geom with manually selected aesthetics.
+
+-   `p + guides(x = guide_axis(n.dodge = 2))`: Avoid crowded or overlapping labels with `guide_axis(n.dodge or angle)`.
+
+-   `n + guides(fill = "none")`: Set legend type for each aesthetic: `colorbar`, `legend`, or `none` (no legend).
+
+-   `n + theme(legend.position = "bottom")`: Place legend at "bottom", "top", "left", or "right".
+
+-   `n + scale_fill_discrete(name = "Title", labels = c("A", "B", "C", "D", "E"))`: Set legend title and labels with a scale function.
+
+## Zooming
+
+-   `t + coord_cartesian(xlim = c(0, 100), ylim = c(10,20))`: Zoom without clipping (preferred).
+
+-   `t + xlim(0, 100) + ylim(10, 20)` or `t + scale_x_continuous(limits = c(0, 100)) + scale_y_continuous(limits = c(0, 100))`: Zoom with clipping (removes unseen data points).
+
+------------------------------------------------------------------------
+
+CC BY SA Posit Software, PBC • [info\@posit.co](mailto:info@posit.co) • [posit.co](https://posit.co)
+
+Learn more at [ggplot2.tidyverse.org](https://ggplot2.tidyverse.org).
+
+Updated: `r format(Sys.Date(), "%Y-%m")`.
+
+```{r}
+#| output: true
+
+packageVersion("ggplot2")
+```
+
+------------------------------------------------------------------------
